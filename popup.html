@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vibed Tab Discarder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      width: 300px;
+      background-color: #fafafa;
+    }
+
+    #controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    /* --- Unified Button Style --- */
+    button {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      padding: 8px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #eeeeff, #a6a6ff);
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.15),
+                  -2px -2px 5px rgba(255, 255, 255, 0.9);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-weight: 500;
+    }
+
+    button:hover {
+      background: linear-gradient(145deg, #e8ffe8, #b0ffb0);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+      transform: translateY(0);
+    }
+
+    /* --- Pin Button State --- */
+    #togglePin.pinned {
+      background: linear-gradient(145deg, #ffe5e5, #ffcaca);
+      color: #c22;
+    }
+
+    /* --- Tab List Styles --- */
+    #tabsList {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .tabItem {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .tabItem span.title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-left: 4px;
+    }
+
+    .tabItem .progressContainer {
+      width: 80px;
+      height: 8px;
+      background-color: #ddd;
+      border-radius: 4px;
+      margin-left: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .tabItem .progressBar {
+      height: 100%;
+      width: 0%;
+      border-radius: 4px;
+    }
+
+    .tabItem img, .tabItem svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .tabItem .indicator {
+      text-align: center;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button id="discardCurrent" title="Discard current tab">💤 Discard</button>
+    <button id="togglePin" title="Pin tab">📌 Pin</button>
+    <button id="options" title="Open options">⚙️ Options</button>
+  </div>
+
+  <div id="tabsList"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

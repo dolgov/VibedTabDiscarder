@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vibed Tab Discarder Options</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fafafa;
+      padding: 20px 24px;
+      max-width: 480px;
+      margin: auto;
+      color: #222;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      font-weight: 600;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+      border: none;
+      border-radius: 8px;
+      box-shadow: inset 2px 2px 4px rgba(0,0,0,0.1),
+                  inset -2px -2px 4px rgba(255,255,255,0.8);
+      background: #fdfdfd;
+      box-sizing: border-box;
+      font-size: 14px;
+      resize: vertical;
+    }
+
+    textarea {
+      min-height: 60px;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #a0c4ff;
+      background: #fff;
+    }
+
+    #debug {
+      width: auto;
+      margin-right: 6px;
+      box-shadow: none;
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      margin-top: 24px;
+      padding: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #eeeeff, #a6a6ff);
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.15),
+                  -2px -2px 5px rgba(255, 255, 255, 0.9);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(145deg, #e8ffe8, #b0ffb0);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+      transform: translateY(0);
+    }
+
+    #message {
+      margin-top: 14px;
+      text-align: center;
+      color: green;
+      font-weight: 500;
+      height: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <h2>Vibed Tab Discarder Options</h2>
+
+  <label for="timeout">Timeout (minutes) before discarding inactive tabs:</label>
+  <input type="number" id="timeout" min="1" />
+
+  <label for="whitelist">Whitelist (comma-separated URL parts to never discard):</label>
+  <textarea id="whitelist" rows="3" placeholder="example.com, youtube.com"></textarea>
+
+  <label for="debug">
+    <input type="checkbox" id="debug" name="debug" /> Enable debugging messages
+  </label>
+
+  <button id="save">💾 Save Settings</button>
+
+  <div id="message"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>
