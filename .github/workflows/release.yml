@@ -4,6 +4,9 @@ on:
   release:
     types: [created]
 
+permissions:
+  contents: write   # ✅ Allow the action to upload release assets
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -45,5 +48,6 @@ jobs:
           files: |
             chrome-extension.zip
             chrome-extension.crx
+          tag_name: ${{ github.ref_name }}    # ✅ Ensures correct tag association
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
