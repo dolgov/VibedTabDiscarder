@@ -17,6 +17,13 @@ chrome.storage.sync.get(['timeout', 'whitelist', 'debug'], (data) => {
 chrome.runtime.onStartup.addListener(initializeTimestamps);
 chrome.runtime.onInstalled.addListener(initializeTimestamps);
 
+chrome.runtime.onSuspend.addListener(() => {
+    if (settings.debug) console.log('Background worker suspended');
+});
+chrome.runtime.onSuspendCanceled.addListener(() => {
+    if (settings.debug) console.log('Background worker resumed');
+});
+
 function initializeTimestamps() {
     chrome.tabs.query({}, (tabs) => {
         const now = Date.now();
