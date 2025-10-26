@@ -12,6 +12,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Install CRX packaging tool
         run: npm install -g chromium-extension-cli
 
@@ -29,7 +34,7 @@ jobs:
           mv dist/*.zip chrome-extension.zip
           mv dist/*.crx chrome-extension.crx
 
-      - name: Upload release asset
+      - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
           files: |
