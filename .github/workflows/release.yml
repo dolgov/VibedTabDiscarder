@@ -12,20 +12,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install CRX packaging tool
+        run: npm install -g chromium-extension-cli
+
       - name: Prepare dist folder
         run: |
           mkdir -p dist
           cp -r background.js popup.js popup.html options.html options.js manifest.json icons dist/ 2>/dev/null || true
 
-      - name: Create ZIP archive
+      - name: Create ZIP and CRX
+        env:
+          EXT_KEY: ${{ secrets.EXTENSION_KEY_PEM }}
         run: |
-          cd dist
-          zip -r ../chrome-extension.zip .
-          cd ..
+          echo "$EXT_KEY" > extension.pem
+          chromium-extension build dist --key extension.pem --zip --crx --out dist
+          mv dist/*.zip chrome-extension.zip
+          mv dist/*.crx chrome-extension.crx
 
       - name: Upload release asset
         uses: softprops/action-gh-release@v2
         with:
-          files: chrome-extension.zip
+          files: |
+            chrome-extension.zip
+            chrome-extension.crx
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
