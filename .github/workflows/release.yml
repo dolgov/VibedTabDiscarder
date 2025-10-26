@@ -1,0 +1,31 @@
+name: Release Chrome Extension
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare dist folder
+        run: |
+          mkdir -p dist
+          cp -r background.js popup.js popup.html options.html options.js manifest.json icons dist/ 2>/dev/null || true
+
+      - name: Create ZIP archive
+        run: |
+          cd dist
+          zip -r ../chrome-extension.zip .
+          cd ..
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: chrome-extension.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

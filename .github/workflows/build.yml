@@ -1,0 +1,42 @@
+name: Build Chrome Extension
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies (if any)
+        run: |
+          if [ -f package.json ]; then
+            npm ci
+          fi
+
+      - name: Prepare dist folder
+        run: |
+          mkdir -p dist
+          cp -r background.js popup.js popup.html options.html options.js manifest.json icons dist/ 2>/dev/null || true
+
+      - name: Create ZIP package
+        run: |
+          cd dist
+          zip -r ../chrome-extension.zip .
+          cd ..
+
+      - name: Upload packaged extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension
+          path: chrome-extension.zip
