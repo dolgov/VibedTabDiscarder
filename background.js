@@ -1,5 +1,4 @@
-const ALARM_PERIOD_MINUTES = 1; // Alarm period in minutes
-const TIME_STAMP_UPDATE_PERIOD_M = 0.3; // Time stamp update period
+const ALARM_PERIOD_MINUTES = 1;
 
 let tabTimestamps = {};
 let settings = { timeout: 30, whitelist: [], debug : false }; // default timeout in minutes
@@ -13,16 +12,17 @@ chrome.storage.sync.get(['timeout', 'whitelist', 'debug'], (data) => {
     if (settings.debug) console.log('Settings loaded:', settings);
 });
 
+chrome.storage.local.get(['tabTimestamps', 'skipList'], (data) => {
+    if (data.tabTimestamps) tabTimestamps = data.tabTimestamps;
+    if (data.skipList) skipList = new Set(data.skipList);
+    if (settings.debug) console.log('tabTimestamps and skipList loaded');
+    // Run first check on reactivation
+    CheckTabsFromTimer();
+});
+
 // --- Initialize tab timestamps on startup or extension reload ---
 chrome.runtime.onStartup.addListener(initializeTimestamps);
 chrome.runtime.onInstalled.addListener(initializeTimestamps);
-
-chrome.runtime.onSuspend.addListener(() => {
-    if (settings.debug) console.log('Background worker suspended');
-});
-chrome.runtime.onSuspendCanceled.addListener(() => {
-    if (settings.debug) console.log('Background worker resumed');
-});
 
 function initializeTimestamps() {
     chrome.tabs.query({}, (tabs) => {
@@ -32,11 +32,13 @@ function initializeTimestamps() {
         });
         if (settings.debug) console.log(`Initialized timestamps for ${tabs.length} open tabs`);
     });
+    chrome.storage.local.set({tabTimestamps});
 }
 
 // Update timestamp
 function updateTabTimestamp(tabId) {
     tabTimestamps[tabId] = Date.now();
+    chrome.storage.local.set({tabTimestamps});
     if (settings.debug) console.log(`Timestamp updated for tab ${tabId}`);
 }
 
@@ -128,46 +130,50 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     }
 });
 
-// Periodic discard and cleanup alarms
-chrome.alarms.create('discardCheck', { periodInMinutes: ALARM_PERIOD_MINUTES });
-chrome.alarms.create('cleanup', { periodInMinutes: ALARM_PERIOD_MINUTES });
-chrome.alarms.create('timeStampUpdate', { periodInMinutes: TIME_STAMP_UPDATE_PERIOD_M });
+
+// Main timer function but needs to be run in the main body too after the worker restarted from inactive
+function CheckTabsFromTimer() {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (!tabs || tabs.length === 0) {
+            if (settings.debug) console.log(`Strange, no active tabs to update timestamp`);
+        } else {
+            updateTabTimestamp(tabs[0].id);
+        }
+    });
+    chrome.tabs.query({}, (tabs) => {
+        const now = Date.now();
+        tabs.forEach(tab => {
+            const last = tabTimestamps[tab.id];
+            if (last && (now - last) / 60000 >= settings.timeout) { // minutes
+                discardTab(tab);
+            }
+        });
+    });
+    chrome.tabs.query({}, (tabs) => {
+        const openTabIds = new Set(tabs.map(t => t.id));
+        Object.keys(tabTimestamps).forEach(tabId => {
+            if (!openTabIds.has(Number(tabId))) {
+                if (settings.debug) console.log(`Cleaning up timestamp for closed tab ${tabId}`);
+                delete tabTimestamps[tabId];
+            }
+        });
+        for (const tabId of Array.from(skipList)) {
+            if (!openTabIds.has(Number(tabId))) {
+                skipList.delete(tabId);
+                if (settings.debug) console.log(`Removed closed tab ${tabId} from skipList`);
+            }
+        }
+    });
+    chrome.storage.local.set({tabTimestamps});
+    chrome.storage.local.set({skipList: Array.from(skipList)});
+}
+
+// Periodic alarm timer to update and discard tabs
+chrome.alarms.create('CheckTabs', { periodInMinutes: ALARM_PERIOD_MINUTES });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name === 'discardCheck') {
-        chrome.tabs.query({}, (tabs) => {
-            const now = Date.now();
-            tabs.forEach(tab => {
-                const last = tabTimestamps[tab.id];
-                if (last && (now - last) / 60000 >= settings.timeout) { // minutes
-                    discardTab(tab);
-                }
-            });
-        });
-    } else if (alarm.name === 'cleanup') {
-        chrome.tabs.query({}, (tabs) => {
-            const openTabIds = new Set(tabs.map(t => t.id));
-            Object.keys(tabTimestamps).forEach(tabId => {
-                if (!openTabIds.has(Number(tabId))) {
-                    if (settings.debug) console.log(`Cleaning up timestamp for closed tab ${tabId}`);
-                    delete tabTimestamps[tabId];
-                }
-            });
-            for (const tabId of Array.from(skipList)) {
-                if (!openTabIds.has(Number(tabId))) {
-                    skipList.delete(tabId);
-                    if (settings.debug) console.log(`Removed closed tab ${tabId} from skipList`);
-                }
-            }
-        });
-    } else if (alarm.name === 'timeStampUpdate') {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (!tabs || tabs.length === 0) {
-                if (settings.debug) console.log(`Strange, no active tabs to update timestamp`);
-            } else {
-                updateTabTimestamp(tabs[0].id);
-            }
-        });
+    if (alarm.name === 'CheckTabs') {
+        CheckTabsFromTimer();
     }
 });
 
@@ -202,6 +208,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         } else {
             skipList.add(tabId);
         }
+        chrome.storage.local.set({skipList: Array.from(skipList)});
         sendResponse({ pinned: skipList.has(tabId) });
     }
     if (message.action === 'isPinned') {
