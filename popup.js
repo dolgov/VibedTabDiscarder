@@ -97,8 +97,9 @@ function renderTabs() {
                 progressBar.style.width = '100%';
                 indicator.textContent = '💤';
                 indicator.title = 'Tab discarded';
-            } else if (tab.TTL) {
-                const fraction = Math.max(0, Math.min(1, tab.TTL / timeout));
+            } else if (tab.lastActive) {
+                const remainingMs = (tab.lastActive + timeout * 60000) - Date.now();
+                const fraction = Math.max(0, Math.min(1, remainingMs / (timeout * 60000)));
 
                 if (fraction >= 0.6) {
                     titleSpan.style.color = 'green';
