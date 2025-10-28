@@ -12,18 +12,7 @@ chrome.storage.sync.get(['timeout', 'whitelist', 'debug'], (data) => {
     if (settings.debug) console.log('Settings loaded:', settings);
 });
 
-chrome.storage.local.get(['tabTimestamps', 'skipList'], (data) => {
-    if (data.tabTimestamps) tabTimestamps = data.tabTimestamps;
-    if (data.skipList) skipList = new Set(data.skipList);
-    if (settings.debug) console.log('tabTimestamps and skipList loaded');
-    // Run first check on reactivation
-    CheckTabsFromTimer();
-});
-
 // --- Initialize tab timestamps on startup or extension reload ---
-chrome.runtime.onStartup.addListener(initializeTimestamps);
-chrome.runtime.onInstalled.addListener(initializeTimestamps);
-
 function initializeTimestamps() {
     chrome.tabs.query({}, (tabs) => {
         const now = Date.now();
@@ -34,6 +23,10 @@ function initializeTimestamps() {
     });
     chrome.storage.local.set({tabTimestamps});
 }
+
+chrome.runtime.onStartup.addListener(initializeTimestamps);
+chrome.runtime.onInstalled.addListener(initializeTimestamps);
+
 
 // Update timestamp
 function updateTabTimestamp(tabId) {
@@ -49,20 +42,8 @@ function isWhitelisted(url) {
 
 // Safe discard tab
 function discardTab(tab) {
-    if (skipList.has(tab.id)) {
-        if (settings.debug) console.log(`Skipped ignored ${tab.id}`);
-        return;
-    }
     if (tab.active) {
         if (settings.debug) console.log(`Skipped active ${tab.id}`);
-        return;
-    }
-    if (tab.pinned) {
-        if (settings.debug) console.log(`Skipped pinned ${tab.id}`);
-        return;
-    }
-    if (isWhitelisted(tab.url)) {
-        if (settings.debug) console.log(`Skipped whitelisted ${tab.id}`);
         return;
     }
     if (tab.discarded) {
@@ -71,6 +52,18 @@ function discardTab(tab) {
     }
     if (tab.audible) {
         if (settings.debug) console.log(`Skipped audible ${tab.id}`);
+        return;
+    }
+    if (tab.pinned) {
+        if (settings.debug) console.log(`Skipped pinned ${tab.id}`);
+        return;
+    }
+    if (skipList.has(tab.id)) {
+        if (settings.debug) console.log(`Skipped ignored ${tab.id}`);
+        return;
+    }
+    if (isWhitelisted(tab.url)) {
+        if (settings.debug) console.log(`Skipped whitelisted ${tab.id}`);
         return;
     }
     if (settings.debug) console.log(`Attempting to discard tab ${tab.id}: ${tab.title}`);
@@ -120,7 +113,6 @@ chrome.tabs.onActivated.addListener(activeInfo => {
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    updateTabTimestamp(tabId);
     if (tab.active && changeInfo.status === 'complete') {
         if (chrome.runtime.lastError) {
             if (settings.debug) console.log(`Could not set icon for tab ${tab.id}: ${chrome.runtime.lastError.message}`);
@@ -177,12 +169,16 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     }
 });
 
-chrome.tabs.onCreated.addListener(tab => updateTabTimestamp(tab.id));
-chrome.tabs.onRemoved.addListener(tabId => {
-    skipList.delete(tabId);
-    delete tabTimestamps[tabId];
-    if (settings.debug) console.log(`Tab removed: ${tabId}`);
+
+// Load local storage -- also called on worker reactivation
+chrome.storage.local.get(['tabTimestamps', 'skipList'], (data) => {
+    if (data.tabTimestamps) tabTimestamps = data.tabTimestamps;
+    if (data.skipList) skipList = new Set(data.skipList);
+    if (settings.debug) console.log('tabTimestamps and skipList loaded');
+    // Run first check on reactivation
+    CheckTabsFromTimer();
 });
+
 
 // Listen for settings changes from storage or popup/options
 chrome.storage.onChanged.addListener(changes => {
