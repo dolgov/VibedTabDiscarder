@@ -60,7 +60,7 @@ This extension **does not animate** favicons because:
 
 > The popup UI displays each tab’s title, favicon, time until discard, and indicators like 📍 (pinned), ✅ (whitelisted), 🎵 (audible), 💤 (discarded).
 
-[!Popup window](Screenshot.png)
+![Popup window](Screenshot.png)
 
 ---
 
