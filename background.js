@@ -101,6 +101,8 @@ function setToolbarIcon(tab) {
 }
 
 // Event listeners for updating icons and time stamps
+chrome.tabs.onCreated.addListener(tab => updateTabTimestamp(tab.id));
+
 chrome.tabs.onActivated.addListener(activeInfo => {
     updateTabTimestamp(activeInfo.tabId);
     chrome.tabs.get(activeInfo.tabId, tab => {
