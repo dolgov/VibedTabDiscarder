@@ -37,6 +37,10 @@ function renderTabs() {
         const { tabs, timeout, whitelist } = response;
         tabsList.innerHTML = '';
 
+        (async () => {
+            const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            // Find the active tab in the current window
+
         tabs.forEach(tab => {
             const div = document.createElement('div');
             div.className = 'tabItem';
@@ -79,27 +83,36 @@ function renderTabs() {
                 progressBar.style.width = '100%';
                 indicator.textContent = '📍';
                 indicator.title = 'Pinned — will not be discarded';
+                progressBar.title = 'Pinned tab — not discarded';
             } else if (isWhitelisted && !tab.discarded) {
                 titleSpan.style.color = 'green';
                 progressBar.style.backgroundColor = 'green';
                 progressBar.style.width = '100%';
                 indicator.textContent = '✅';
                 indicator.title = 'Whitelisted URL — will not be discarded';
+                progressBar.title = 'Whitelisted tab — not discarded';
             } else if (isAudible) {
                 titleSpan.style.color = 'green';
                 progressBar.style.backgroundColor = 'green';
                 progressBar.style.width = '100%';
                 indicator.textContent = '🎵';
                 indicator.title = 'Audio playing — will not be discarded';
+                progressBar.title = 'Audio tab — not discarded';
             } else if (tab.discarded) {
                 titleSpan.style.color = 'gray';
                 progressBar.style.backgroundColor = 'gray';
                 progressBar.style.width = '100%';
                 indicator.textContent = '💤';
                 indicator.title = 'Tab discarded';
+                progressBar.title = 'Tab discarded';
             } else if (tab.lastActive) {
                 const remainingMs = (tab.lastActive + timeout * 60000) - Date.now();
                 const fraction = Math.max(0, Math.min(1, remainingMs / (timeout * 60000)));
+
+                const remainingSec = Math.max(0, Math.floor(remainingMs / 1000));
+                const minutes = Math.floor(remainingSec / 60);
+                const seconds = String(remainingSec % 60).padStart(2, '0');
+                progressBar.title = `Time left: ${minutes}:${seconds}`;
 
                 if (fraction >= 0.6) {
                     titleSpan.style.color = 'green';
@@ -117,6 +130,18 @@ function renderTabs() {
                 titleSpan.style.color = 'black';
                 progressBar.style.backgroundColor = '#ccc';
                 progressBar.style.width = '0%';
+                progressBar.title = 'No activity recorded';
+            }
+
+            // --- Highlight the currently active tab ---
+            if (activeTab && tab.id === activeTab.id) {
+                div.style.background = 'linear-gradient(90deg, #ffe9f0, #fff)';
+                div.style.border = '1px solid #d6336c';
+                titleSpan.style.color = '#d6336c';
+                titleSpan.style.fontWeight = 'bold';
+                indicator.textContent = '⭐';
+                indicator.title = 'Currently active tab';
+                activeTabElement = div; // remember for scrolling
             }
 
             progressContainer.appendChild(progressBar);
@@ -125,6 +150,15 @@ function renderTabs() {
             div.appendChild(indicator);
             tabsList.appendChild(div);
         });
+
+        // --- Scroll to center the active tab in view ---
+        if (activeTabElement) {
+            setTimeout(() => {
+                activeTabElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }, 100);
+        }
+
+      })();
     });
 }
 
