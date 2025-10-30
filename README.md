@@ -4,7 +4,6 @@
 [![Release](https://img.shields.io/github/v/release/dolgov/VibedTabDiscarder?label=release)](https://github.com/dolgov/VibedTabDiscarder/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Chrome Manifest V3](https://img.shields.io/badge/Manifest-V3-green.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
-[![Code Style: Prettier](https://img.shields.io/badge/code%20style-prettier-ff69b4.svg)](https://prettier.io/)
 
 > 🧠 A privacy-respecting Chrome extension that automatically discards inactive tabs using Chrome’s **native discard mechanism** — keeping your browser fast and light without breaking websites. Essentially, a user-friendly Chrome's Memory Saver with controllable timeout and whitelist.
 
@@ -58,7 +57,7 @@ This extension **does not animate** favicons because:
 - Animation can increase CPU usage and distract users.
 - Instead, Vibed Tab Discarder provides a **popup list** showing all open tabs with live progress bars and indicators.
 
-> The popup UI displays each tab’s title, favicon, time until discard, and indicators like 📍 (pinned), ✅ (whitelisted), 🎵 (audible), 💤 (discarded).
+> The popup UI displays each tab’s title, favicon, time until discard, and indicators like 📍 (pinned), ✅ (whitelisted), 🎵 (audible), 💤 (discarded) and ⭐ (active).
 
 ![Popup window](Screenshot.png)
 
