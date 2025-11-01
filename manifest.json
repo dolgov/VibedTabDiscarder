@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Vibed Tab Discarder",
-  "version": "1.0",
+  "version": "1.05",
   "description": "Automatically discard inactive tabs.",
   "permissions": [
     "tabs",
