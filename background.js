@@ -16,15 +16,34 @@ chrome.storage.sync.get(['timeout', 'whitelist', 'debug'], (data) => {
 function initializeTimestamps() {
     chrome.tabs.query({}, (tabs) => {
         const now = Date.now();
-        tabs.forEach(tab => {
-            tabTimestamps[tab.id] = now;
-        });
-        if (settings.debug) console.log(`Initialized timestamps for ${tabs.length} open tabs`);
+        let newCount = 0;
+
+        for (const tab of tabs) {
+            // Only initialize if the tab doesn’t already have a timestamp
+            if (!(tab.id in tabTimestamps)) {
+                tabTimestamps[tab.id] = now;
+                newCount++;
+            }
+        }
+
+        if (settings.debug) {
+            console.log(
+                `initializeTimestamps: ensured timestamps for ${tabs.length} tabs, ` +
+                `${newCount} were newly initialized`
+            );
+        }
+        chrome.storage.local.set({tabTimestamps});
     });
-    chrome.storage.local.set({tabTimestamps});
 }
 
-chrome.runtime.onStartup.addListener(initializeTimestamps);
+chrome.runtime.onStartup.addListener(() => {
+    if (settings.debug) console.log('Browser startup detected — scheduling timestamp update');
+
+    // Wait a bit for Chrome to restore all tabs
+    setTimeout(() => {
+        initializeTimestamps();
+    }, 8000); // 8 seconds — tweak for slower systems
+});
 chrome.runtime.onInstalled.addListener(initializeTimestamps);
 
 

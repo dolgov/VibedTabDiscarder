@@ -129,7 +129,7 @@ function renderTabs() {
             } else {
                 titleSpan.style.color = 'black';
                 progressBar.style.backgroundColor = '#ccc';
-                progressBar.style.width = '0%';
+                progressBar.style.width = '100%';
                 progressBar.title = 'No activity recorded';
             }
 
